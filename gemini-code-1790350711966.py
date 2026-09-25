@@ -164,6 +164,12 @@ def render_dashboard():
 
     # 6. F1 Points Bar Chart
     st.subheader("📊 Cumulative F1 Points Visualizer")
-    st.bar_chart(df.set_index("Team Name")["F1 Points"])
+st.bar_chart(
+    df,
+    x="Team Name",
+    y="F1 Points",
+    sort=False,
+    horizontal=True
+)
 
 render_dashboard()
