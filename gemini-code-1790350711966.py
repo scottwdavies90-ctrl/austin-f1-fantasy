@@ -169,7 +169,6 @@ st.bar_chart(
     x="Team Name",
     y="F1 Points",
     sort=False,
-    horizontal=True
-)
+    horizontal=True)
 
 render_dashboard()
