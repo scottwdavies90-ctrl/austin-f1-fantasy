@@ -9,6 +9,13 @@ st.set_page_config(
     layout="wide"
 )
 
+# Sidebar Controls
+with st.sidebar:
+    st.header("⚙️ Controls")
+    if st.button("🔄 Refresh Data", use_container_width=True):
+        st.cache_data.clear()
+        st.rerun()
+
 # ESPN League Settings
 LEAGUE_ID = "92432855"
 SEASON_ID = "2026"
@@ -24,17 +31,14 @@ def fetch_espn_data():
         return None
     return None
 
-# Native Streamlit fragment decorator handles auto-refresh every 30s
-@st.fragment(run_every="30s")
-def render_dashboard():
+def build_dashboard():
+    st.title("🏎️ F1 DRIVERS' CHAMPIONSHIP")
+    st.caption("Live Telemetry & Standings | Auto-refreshes during live games")
+
     data = fetch_espn_data()
 
-    # Header Section
-    st.title("🏎️ F1 DRIVERS' CHAMPIONSHIP")
-    st.caption("Live Telemetry & Standings | Auto-refreshes every 30 seconds")
-
     if not data:
-        st.error("Unable to connect to ESPN API. Please ensure your league is set to 'Public' in ESPN League Settings.")
+        st.error("Unable to connect to ESPN API. Please verify your league is set to 'Public' in ESPN League Settings.")
         return
 
     # 1. Map Teams
@@ -54,7 +58,7 @@ def render_dashboard():
 
     weekly_scores = {}
 
-    # 2. Parse Matchup Data & Scores
+    # 2. Parse Matchups & Scores
     for game in data.get("schedule", []):
         week = game["matchupPeriodId"]
         if week not in weekly_scores:
@@ -79,7 +83,7 @@ def render_dashboard():
                 standings[game["home"]["teamId"]]["ties"] += 1
                 standings[game["away"]["teamId"]]["ties"] += 1
 
-    # 3. Calculate F1 Points & Podium Stats
+    # 3. Calculate F1 Points & Podiums
     latest_completed_week = 0
     for week in sorted(weekly_scores.keys()):
         scores = weekly_scores[week]
@@ -102,21 +106,21 @@ def render_dashboard():
             if f1_pts > 0:
                 standings[s["teamId"]]["points_finishes"] += 1
 
-    # Identify DNF Team (lowest score in latest active week)
+    # Identify DNF Team
     dnf_team_id = None
     if latest_completed_week > 0 and weekly_scores[latest_completed_week]:
         latest = sorted(weekly_scores[latest_completed_week], key=lambda x: x["score"])
         if latest:
             dnf_team_id = latest[0]["teamId"]
 
-    # Sort Standings: Primary = F1 Points (Desc), Tiebreaker = Total Fantasy Points (Desc)
+    # Sort Standings: Primary = F1 Points (Desc), Tiebreaker = Total Points (Desc)
     sorted_teams = sorted(
         standings.values(),
         key=lambda x: (x["f1"], x["points"]),
         reverse=True
     )
 
-    # 4. Top KPI Highlight Cards
+    # 4. KPI Highlights
     col1, col2, col3 = st.columns(3)
     leader_name = sorted_teams[0]["name"] if sorted_teams else "N/A"
     top_scorer_name = max(standings.values(), key=lambda x: x["points"])["name"] if standings else "N/A"
@@ -128,10 +132,10 @@ def render_dashboard():
 
     st.divider()
 
-    # 5. Build Leaderboard
+    # 5. Build Leaderboard Table
     table_data = []
     for idx, t in enumerate(sorted_teams):
-        # Driver Form Indicator (Last 3 Weeks)
+        # Driver Form Indicator
         last3 = t["recent_ranks"][-3:]
         avg_rank = sum(last3) / len(last3) if last3 else 5
         if avg_rank <= 2:
@@ -162,13 +166,15 @@ def render_dashboard():
     st.subheader("🏎️ Drivers' Championship Standings")
     st.dataframe(df, use_container_width=True, hide_index=True)
 
-    # 6. F1 Points Bar Chart
+    # 6. Cumulative Points Bar Chart (Preserving Leaderboard Order P1 -> P10)
     st.subheader("📊 Cumulative F1 Points Visualizer")
-st.bar_chart(
-    df,
-    x="Team Name",
-    y="F1 Points",
-    sort=False,
-    horizontal=True)
+    st.bar_chart(
+        df,
+        x="Team Name",
+        y="F1 Points",
+        sort=False,
+        horizontal=True
+    )
 
-render_dashboard()
+# Execute dashboard
+build_dashboard()
