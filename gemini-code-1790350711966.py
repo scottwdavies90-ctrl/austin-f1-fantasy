@@ -9,12 +9,33 @@ st.set_page_config(
     layout="wide"
 )
 
-# Sidebar Controls
-with st.sidebar:
-    st.header("⚙️ Controls")
-    if st.button("🔄 Refresh Data", use_container_width=True):
-        st.cache_data.clear()
-        st.rerun()
+# Mobile CSS Optimizations (Reduces padding, hides desktop space)
+st.markdown("""
+<style>
+    /* Reduce top padding on mobile screens */
+    .block-container {
+        padding-top: 1rem !important;
+        padding-bottom: 2rem !important;
+        padding-left: 0.8rem !important;
+        padding-right: 0.8rem !important;
+    }
+    /* Compact Metric Cards for narrow viewports */
+    [data-testid="stMetricValue"] {
+        font-size: 1.4rem !important;
+    }
+    [data-testid="stMetricLabel"] {
+        font-size: 0.85rem !important;
+    }
+    /* Touch-friendly tab headers */
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 8px;
+    }
+    .stTabs [data-baseweb="tab"] {
+        padding: 8px 16px;
+        font-weight: 600;
+    }
+</style>
+""", unsafe_allow_html=True)
 
 # ESPN League Settings
 LEAGUE_ID = "92432855"
@@ -32,13 +53,19 @@ def fetch_espn_data():
     return None
 
 def build_dashboard():
-    st.title("🏎️ F1 DRIVERS' CHAMPIONSHIP")
-    st.caption("Live Telemetry & Standings | Auto-refreshes during live games")
+    # Top Mobile Action Bar
+    col_title, col_btn = st.columns([3, 1], vertical_alignment="center")
+    with col_title:
+        st.title("🏎️ Austin FF F1")
+    with col_btn:
+        if st.button("🔄 Refresh", use_container_width=True):
+            st.cache_data.clear()
+            st.rerun()
 
     data = fetch_espn_data()
 
     if not data:
-        st.error("Unable to connect to ESPN API. Please verify your league is set to 'Public' in ESPN League Settings.")
+        st.error("Unable to connect to ESPN API. Ensure your league is set to 'Public'.")
         return
 
     # 1. Map Teams
@@ -71,7 +98,6 @@ def build_dashboard():
                 weekly_scores[week].append({"teamId": t_id, "score": score})
                 standings[t_id]["points"] += score
 
-        # Record W-L-T
         if game.get("home") and game.get("away") and game.get("winner") and game["winner"] != "UNDECIDED":
             if game["winner"] == "HOME":
                 standings[game["home"]["teamId"]]["wins"] += 1
@@ -113,68 +139,82 @@ def build_dashboard():
         if latest:
             dnf_team_id = latest[0]["teamId"]
 
-    # Sort Standings: Primary = F1 Points (Desc), Tiebreaker = Total Points (Desc)
+    # Primary Sort: F1 Points (Desc) | Tiebreaker: Total Points (Desc)
     sorted_teams = sorted(
         standings.values(),
         key=lambda x: (x["f1"], x["points"]),
         reverse=True
     )
 
-    # 4. KPI Highlights
-    col1, col2, col3 = st.columns(3)
-    leader_name = sorted_teams[0]["name"] if sorted_teams else "N/A"
-    top_scorer_name = max(standings.values(), key=lambda x: x["points"])["name"] if standings else "N/A"
-    dnf_name = teams_map.get(dnf_team_id, "None") if dnf_team_id else "None"
+    # Clean Mobile Tab Navigation
+    tab_standings, tab_telemetry = st.tabs(["🏆 Standings", "📊 Telemetry & Chart"])
 
-    col1.metric("🏆 Championship Leader (P1)", leader_name)
-    col2.metric("🎯 Top Fantasy Scorer", top_scorer_name)
-    col3.metric("💥 Latest DNF / Engine Failure", dnf_name)
+    with tab_standings:
+        # Top Compact KPI Metrics
+        c1, c2, c3 = st.columns(3)
+        leader_name = sorted_teams[0]["name"] if sorted_teams else "N/A"
+        top_scorer_name = max(standings.values(), key=lambda x: x["points"])["name"] if standings else "N/A"
+        dnf_name = teams_map.get(dnf_team_id, "None") if dnf_team_id else "None"
 
-    st.divider()
+        c1.metric("P1 Leader", leader_name)
+        c2.metric("Top Scorer", top_scorer_name)
+        c3.metric("Latest DNF 💥", dnf_name)
 
-    # 5. Build Leaderboard Table
-    table_data = []
-    for idx, t in enumerate(sorted_teams):
-        # Driver Form Indicator
-        last3 = t["recent_ranks"][-3:]
-        avg_rank = sum(last3) / len(last3) if last3 else 5
-        if avg_rank <= 2:
-            form = "🔥 Hot"
-        elif avg_rank <= 4:
-            form = "📈 Surging"
-        elif avg_rank >= 8:
-            form = "📉 Slumping"
-        else:
-            form = "➖ Steady"
+        st.divider()
+
+        # Mobile Leaderboard Data Structure
+        table_data = []
+        for idx, t in enumerate(sorted_teams):
+            last3 = t["recent_ranks"][-3:]
+            avg_rank = sum(last3) / len(last3) if last3 else 5
+            if avg_rank <= 2:
+                form = "🔥 Hot"
+            elif avg_rank <= 4:
+                form = "📈 Surging"
+            elif avg_rank >= 8:
+                form = "📉 Slumping"
+            else:
+                form = "➖ Steady"
+                
+            status = "💥 DNF" if dnf_team_id and teams_map[dnf_team_id] == t["name"] else "✅ OK"
             
-        status = "💥 DNF Engine Failure" if dnf_team_id and teams_map[dnf_team_id] == t["name"] else "✅ CLASSIFIED"
-        
-        table_data.append({
-            "Rank": f"P{idx + 1}",
-            "Team Name": t["name"],
-            "Form": form,
-            "Status": status,
-            "F1 Points": t["f1"],
-            "Total Points": round(t["points"], 2),
-            "Record": f"{t['wins']}-{t['losses']}-{t['ties']}",
-            "P1 Wins": t["p1"],
-            "Podiums": t["podiums"]
-        })
+            table_data.append({
+                "Pos": f"P{idx + 1}",
+                "Team Name": t["name"],
+                "F1 Pts": t["f1"],
+                "Total Pts": round(t["points"], 2),
+                "Form": form,
+                "Status": status,
+                "Record": f"{t['wins']}-{t['losses']}-{t['ties']}",
+                "P1 / Podiums": f"🥇{t['p1']} | 🏆{t['podiums']}"
+            })
 
-    df = pd.DataFrame(table_data)
+        df = pd.DataFrame(table_data)
 
-    st.subheader("🏎️ Drivers' Championship Standings")
-    st.dataframe(df, use_container_width=True, hide_index=True)
+        # Render Touch-Friendly Dataframe with Specific Column Formatting
+        st.dataframe(
+            df,
+            use_container_width=True,
+            hide_index=True,
+            column_config={
+                "Pos": st.column_config.TextColumn("Pos", width="small"),
+                "Team Name": st.column_config.TextColumn("Team Name", width="medium"),
+                "F1 Pts": st.column_config.NumberColumn("F1 Pts", format="%d Pts"),
+                "Total Pts": st.column_config.NumberColumn("Total Pts", format="%.2f"),
+                "Form": st.column_config.TextColumn("Form", width="small"),
+                "Status": st.column_config.TextColumn("Status", width="small"),
+            }
+        )
 
-    # 6. Cumulative Points Bar Chart (Preserving Leaderboard Order P1 -> P10)
-    st.subheader("📊 Cumulative F1 Points Visualizer")
-    st.bar_chart(
-        df,
-        x="Team Name",
-        y="F1 Points",
-        sort=False,
-        horizontal=True
-    )
+    with tab_telemetry:
+        st.subheader("📊 F1 Points Leaderboard")
+        st.bar_chart(
+            df,
+            x="Team Name",
+            y="F1 Pts",
+            sort=False,
+            horizontal=True
+        )
 
-# Execute dashboard
+# Execute App
 build_dashboard()
