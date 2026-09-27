@@ -7,93 +7,186 @@ import time
 st.set_page_config(
     page_title="Austin FF F1 Championship",
     page_icon="🏎️",
-    layout="wide"
+    layout="wide",
+    initial_sidebar_state="collapsed"
 )
 
-# --- CUSTOM CSS (F1 MOTORSPORT DARK THEME) ---
+# --- HIGH-END MOTORSPORT DARK MODE CSS ---
 st.markdown("""
 <style>
-    /* Dark Theme Base */
     .stApp {
-        background-color: #0E1117;
+        background-color: #0B0E14;
+        color: #F3F4F6;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+    
+    .block-container {
+        padding-top: 0.75rem !important;
+        padding-bottom: 2rem !important;
+        padding-left: 0.75rem !important;
+        padding-right: 0.75rem !important;
+        max-width: 100% !important;
+    }
+
+    header[data-testid="stHeader"] { visibility: hidden; height: 0px; }
+    footer { visibility: hidden; }
+
+    .app-title {
+        font-size: 1.25rem;
+        font-weight: 800;
+        letter-spacing: -0.5px;
         color: #FFFFFF;
     }
-    
-    /* F1 Red Accents & Headers */
-    h1, h2, h3 {
-        color: #FF1801 !important;
-        font-family: 'Titillium Web', sans-serif;
-        font-weight: 700;
-        letter-spacing: 0.5px;
+    .app-subtitle {
+        font-size: 0.72rem;
+        color: #9CA3AF;
     }
-    
-    /* Driver Cards */
-    .driver-card {
-        background-color: #1A1D24;
-        border-left: 5px solid #FF1801;
-        border-radius: 8px;
-        padding: 16px;
-        margin-bottom: 12px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+
+    .metric-card {
+        background: #161B22;
+        border: 1px solid #21262D;
+        border-radius: 10px;
+        padding: 10px 12px;
+        margin-bottom: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
     }
-    .driver-card-p1 {
-        border-left: 5px solid #FFD700 !important;
-        background: linear-gradient(135deg, #1A1D24 80%, rgba(255, 215, 0, 0.12));
+    .metric-card.p1-card {
+        border-left: 4px solid #F59E0B;
+        background: linear-gradient(135deg, #1C1917 0%, #161B22 100%);
     }
-    .driver-card-p2 {
-        border-left: 5px solid #C0C0C0 !important;
+    .metric-card.top-card {
+        border-left: 4px solid #10B981;
     }
-    .driver-card-p3 {
-        border-left: 5px solid #CD7F32 !important;
+    .metric-card.dnf-card {
+        border-left: 4px solid #EF4444;
     }
-    
-    /* Metric Display Box */
-    .metric-container {
-        background-color: #1A1D24;
-        border-radius: 8px;
-        padding: 15px;
-        text-align: center;
-        border: 1px solid #2D3139;
-    }
-    .metric-val {
-        font-size: 22px;
-        font-weight: bold;
-        color: #FF1801;
-    }
-    .metric-lbl {
-        font-size: 12px;
-        color: #A0AAB8;
+    .metric-label {
+        font-size: 0.68rem;
         text-transform: uppercase;
-        letter-spacing: 1px;
+        letter-spacing: 0.6px;
+        color: #8B949E;
+        font-weight: 700;
+    }
+    .metric-value {
+        font-size: 1.05rem;
+        font-weight: 800;
+        color: #F3F4F6;
+        margin-top: 2px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .driver-card {
+        background: #161B22;
+        border: 1px solid #21262D;
+        border-radius: 10px;
+        padding: 12px 14px;
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+    }
+    .driver-card.p1-border {
+        border: 1px solid #F59E0B;
+        background: linear-gradient(135deg, #1C1917 0%, #161B22 100%);
+    }
+    .driver-rank {
+        font-size: 1.1rem;
+        font-weight: 900;
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 12px;
+        flex-shrink: 0;
+    }
+    .rank-p1 { background: #F59E0B; color: #000000; }
+    .rank-p2 { background: #94A3B8; color: #000000; }
+    .rank-p3 { background: #D97706; color: #FFFFFF; }
+    .rank-points { background: #21262D; color: #C9D1D9; }
+
+    .driver-info {
+        flex-grow: 1;
+        min-width: 0;
+    }
+    .driver-name {
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: #F0F6FC;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .driver-sub {
+        font-size: 0.72rem;
+        color: #8B949E;
+        margin-top: 2px;
+    }
+    .driver-stats {
+        text-align: right;
+        flex-shrink: 0;
+        padding-left: 10px;
+    }
+    .f1-badge {
+        font-size: 1.2rem;
+        font-weight: 900;
+        color: #38BDF8;
+        line-height: 1;
+    }
+    .f1-label {
+        font-size: 0.65rem;
+        color: #6E7681;
+        text-transform: uppercase;
+        font-weight: 700;
+        margin-top: 2px;
+    }
+
+    .stButton>button {
+        background-color: #E10600 !important;
+        color: #FFFFFF !important;
+        border: none !important;
+        border-radius: 8px !important;
+        font-weight: 700 !important;
+        font-size: 0.85rem !important;
+        padding: 6px 12px !important;
     }
     
-    /* F1 Badge */
-    .f1-badge {
-        background-color: #FF1801;
-        color: white;
-        padding: 4px 10px;
-        border-radius: 12px;
-        font-weight: bold;
-        font-size: 14px;
-        float: right;
+    .stTabs [data-baseweb="tab-list"] {
+        background-color: #161B22;
+        padding: 4px;
+        border-radius: 10px;
+        border: 1px solid #21262D;
+        gap: 4px;
+        margin-bottom: 12px;
+    }
+    .stTabs [data-baseweb="tab"] {
+        border-radius: 8px;
+        color: #8B949E;
+        font-size: 0.85rem;
+        font-weight: 600;
+        padding: 8px 12px;
+        flex-grow: 1;
+        text-align: center;
+    }
+    .stTabs [aria-selected="true"] {
+        background-color: #21262D !important;
+        color: #FFFFFF !important;
     }
 </style>
 """, unsafe_allow_html=True)
 
-# --- CONSTANTS & API CONFIG ---
+# --- ESPN API CONFIGURATION ---
 LEAGUE_ID = "92432855"
 SEASON_ID = "2026"
 BASE_URL = f"https://lm-api-reads.fantasy.espn.com/apis/v3/games/ffl/seasons/{SEASON_ID}/segments/0/leagues/{LEAGUE_ID}"
 
-# F1 Points System (1st to 10th Place)
-F1_POINTS_MAP = {1: 25, 2: 18, 3: 15, 4: 12, 5: 10, 6: 8, 7: 6, 8: 4, 9: 2, 10: 1}
-
-# --- LIVE DATA FETCHING ---
 @st.cache_data(ttl=10)
 def fetch_espn_data():
     try:
-        # mBoxScore retrieves active play-by-play points during live games
-        # _ts timestamp and Cache-Control headers bypass ESPN's Akamai CDN cache
+        # Includes mBoxScore for real-time live games + timestamp header to bypass ESPN's Akamai CDN cache
         params = {
             "view": ["mMatchupScore", "mTeam", "mBoxScore", "mRoster"],
             "_ts": int(time.time())
@@ -110,179 +203,229 @@ def fetch_espn_data():
         return None
     return None
 
-# --- DATA PROCESSING & F1 SCORING ---
-def process_f1_standings(data):
-    if not data or "teams" not in data:
-        return None
-        
-    teams = {t["id"]: f"{t.get('location', '')} {t.get('nickname', '')}".strip() or f"Team {t['id']}" for t in data.get("teams", [])}
-    team_records = {t["id"]: t.get("record", {}).get("overall", {}) for t in data.get("teams", [])}
-    
-    # Store weekly team scores
+def build_dashboard():
+    # Top Action Bar
+    col_title, col_btn = st.columns([3, 1], vertical_alignment="center")
+    with col_title:
+        st.markdown('''
+        <div>
+            <div class="app-title">🏎️ Austin FF F1</div>
+            <div class="app-subtitle">Live Telemetry & Championship Standings</div>
+        </div>
+        ''', unsafe_allow_html=True)
+    with col_btn:
+        if st.button("🔄 Refresh", use_container_width=True):
+            st.cache_data.clear()
+            st.rerun()
+
+    data = fetch_espn_data()
+
+    if not data:
+        st.error("Unable to connect to ESPN API. Ensure your league is set to 'Public' in League Settings.")
+        return
+
+    # 1. Map Teams
+    teams_map = {t["id"]: t["name"] for t in data.get("teams", [])}
+    num_teams = len(teams_map)
+
+    standings = {
+        t_id: {
+            "name": name,
+            "wins": 0, "losses": 0, "ties": 0,
+            "points": 0.0, "f1": 0, "p1": 0,
+            "podiums": 0, "points_finishes": 0,
+            "recent_ranks": []
+        }
+        for t_id, name in teams_map.items()
+    }
+
     weekly_scores = {}
-    schedule = data.get("schedule", [])
-    
-    for match in schedule:
-        week = match.get("matchupPeriodId")
-        if not week:
-            continue
-            
+
+    # 2. Parse Matchups & Cumulative Points
+    for game in data.get("schedule", []):
+        week = game["matchupPeriodId"]
         if week not in weekly_scores:
-            weekly_scores[week] = {}
+            weekly_scores[week] = []
             
         for side in ["home", "away"]:
-            if side in match:
-                team_id = match[side].get("teamId")
-                score = match[side].get("totalPoints", 0)
-                if team_id:
-                    if team_id not in weekly_scores[week] or score > 0:
-                        weekly_scores[week][team_id] = score
+            if side in game and game[side]:
+                t_id = game[side]["teamId"]
+                score = game[side]["totalPoints"]
+                weekly_scores[week].append({"teamId": t_id, "score": score})
+                standings[t_id]["points"] += score
 
-    # Include weeks where games are actively being played / points are scored
-    active_weeks = [w for w, scores in weekly_scores.items() if sum(scores.values()) > 0]
-    
-    driver_totals = {tid: {"f1_pts": 0, "total_pf": 0, "wins": 0, "losses": 0, "ties": 0} for tid in teams}
-    
-    for tid, rec in team_records.items():
-        if tid in driver_totals:
-            driver_totals[tid]["wins"] = rec.get("wins", 0)
-            driver_totals[tid]["losses"] = rec.get("losses", 0)
-            driver_totals[tid]["ties"] = rec.get("ties", 0)
+        if game.get("home") and game.get("away") and game.get("winner") and game["winner"] != "UNDECIDED":
+            if game["winner"] == "HOME":
+                standings[game["home"]["teamId"]]["wins"] += 1
+                standings[game["away"]["teamId"]]["losses"] += 1
+            elif game["winner"] == "AWAY":
+                standings[game["away"]["teamId"]]["wins"] += 1
+                standings[game["home"]["teamId"]]["losses"] += 1
+            else:
+                standings[game["home"]["teamId"]]["ties"] += 1
+                standings[game["away"]["teamId"]]["ties"] += 1
 
-    # Award weekly F1 points based on score rankings
-    for w in active_weeks:
-        scores = weekly_scores[w]
-        ranked = sorted(scores.items(), key=lambda x: x[1], reverse=True)
+    # 3. Calculate Custom F1 Points (10 pts for 1st down to 1 pt for 10th)
+    latest_completed_week = 0
+    for week in sorted(weekly_scores.keys()):
+        scores = weekly_scores[week]
+        if all(s["score"] == 0 for s in scores):
+            continue
         
-        for rank, (tid, pf) in enumerate(ranked, start=1):
-            if tid in driver_totals:
-                driver_totals[tid]["total_pf"] += pf
-                f1_pts = F1_POINTS_MAP.get(rank, 0)
-                # +1 Fastest Lap / Highest Weekly Scorer Bonus
-                if rank == 1 and pf > 0:
-                    f1_pts += 1
-                driver_totals[tid]["f1_pts"] += f1_pts
-
-    rows = []
-    for tid, name in teams.items():
-        stats = driver_totals[tid]
-        rows.append({
-            "Driver / Team": name,
-            "F1 Points": stats["f1_pts"],
-            "Total PF": round(stats["total_pf"], 2),
-            "Record": f"{stats['wins']}-{stats['losses']}-{stats['ties']}"
-        })
+        latest_completed_week = week
+        scores.sort(key=lambda x: x["score"], reverse=True)
         
-    df = pd.DataFrame(rows)
-    if not df.empty:
-        # Primary sort: F1 Points. Tiebreaker: Total Points For (PF)
-        df = df.sort_values(by=["F1 Points", "Total PF"], ascending=[False, False]).reset_index(drop=True)
-        df.index += 1
-        
-    return df
-
-# --- APPLICATION UI ---
-st.title("🏎️ Austin FF F1 Championship")
-st.caption("Live Drivers' Championship Standings & Matchday Telemetry")
-
-col_btn, col_blank = st.columns([1, 4])
-with col_btn:
-    if st.button("🔄 Refresh Live Data", use_container_width=True):
-        st.cache_data.clear()
-        st.rerun()
-
-data = fetch_espn_data()
-
-if data:
-    df_standings = process_f1_standings(data)
-    
-    if df_standings is not None and not df_standings.empty:
-        # Highlight Metrics
-        p1_leader = df_standings.iloc[0]["Driver / Team"]
-        p1_pts = df_standings.iloc[0]["F1 Points"]
-        
-        top_scorer_row = df_standings.sort_values(by="Total PF", ascending=False).iloc[0]
-        top_scorer = top_scorer_row["Driver / Team"]
-        top_pf = top_scorer_row["Total PF"]
-        
-        dnf_row = df_standings.iloc[-1]
-        dnf_driver = dnf_row["Driver / Team"]
-
-        m1, m2, m3 = st.columns(3)
-        with m1:
-            st.markdown(f"""
-            <div class="metric-container">
-                <div class="metric-lbl">🏆 Championship Leader</div>
-                <div class="metric-val">{p1_leader}</div>
-                <div style="color:#A0AAB8; font-size:12px;">{p1_pts} PTS</div>
-            </div>
-            """, unsafe_allow_html=True)
+        for idx, s in enumerate(scores):
+            rank = idx + 1
+            # Custom Formula: 10 points for 1st place down to 1 point for 10th place
+            f1_pts = max(0, num_teams - idx)
+            standings[s["teamId"]]["f1"] += f1_pts
+            standings[s["teamId"]]["recent_ranks"].append(rank)
             
-        with m2:
-            st.markdown(f"""
-            <div class="metric-container">
-                <div class="metric-lbl">⚡ Top Points Finisher</div>
-                <div class="metric-val">{top_scorer}</div>
-                <div style="color:#A0AAB8; font-size:12px;">{top_pf} PF</div>
-            </div>
-            """, unsafe_allow_html=True)
+            if rank == 1:
+                standings[s["teamId"]]["p1"] += 1
+            if rank <= 3:
+                standings[s["teamId"]]["podiums"] += 1
+            if f1_pts > 0:
+                standings[s["teamId"]]["points_finishes"] += 1
 
-        with m3:
-            st.markdown(f"""
-            <div class="metric-container">
-                <div class="metric-lbl">⚠️ Rear of Grid (P10)</div>
-                <div class="metric-val">{dnf_driver}</div>
-                <div style="color:#A0AAB8; font-size:12px;">{dnf_row['F1 Points']} PTS</div>
-            </div>
-            """, unsafe_allow_html=True)
+    # Identify DNF Team (Lowest scorer of the latest week)
+    dnf_team_id = None
+    if latest_completed_week > 0 and weekly_scores[latest_completed_week]:
+        latest = sorted(weekly_scores[latest_completed_week], key=lambda x: x["score"])
+        if latest:
+            dnf_team_id = latest[0]["teamId"]
 
-        st.markdown("---")
+    # Sort Standings: Primary = F1 Points (Desc) | Tiebreaker = Total Points For (Desc)
+    sorted_teams = sorted(
+        standings.values(),
+        key=lambda x: (x["f1"], x["points"]),
+        reverse=True
+    )
 
-        # Visual Tabs
-        tab1, tab2, tab3 = st.tabs(["🏎️ Driver Standings", "📊 Telemetry", "📋 Full Table"])
+    # 4. Metric Header Highlights
+    k1, k2, k3 = st.columns(3)
+    leader_name = sorted_teams[0]["name"] if sorted_teams else "N/A"
+    top_scorer_name = max(standings.values(), key=lambda x: x["points"])["name"] if standings else "N/A"
+    dnf_name = teams_map.get(dnf_team_id, "None") if dnf_team_id else "None"
 
-        with tab1:
-            st.subheader("Drivers' Championship Standings")
-            for rank, row in df_standings.iterrows():
-                card_class = "driver-card"
-                if rank == 1:
-                    card_class += " driver-card-p1"
-                elif rank == 2:
-                    card_class += " driver-card-p2"
-                elif rank == 3:
-                    card_class += " driver-card-p3"
+    with k1:
+        st.markdown(f'''
+        <div class="metric-card p1-card">
+            <div class="metric-label">🏆 Championship Leader</div>
+            <div class="metric-value">{leader_name}</div>
+        </div>
+        ''', unsafe_allow_html=True)
+    with k2:
+        st.markdown(f'''
+        <div class="metric-card top-card">
+            <div class="metric-label">🎯 Top Scorer</div>
+            <div class="metric-value">{top_scorer_name}</div>
+        </div>
+        ''', unsafe_allow_html=True)
+    with k3:
+        st.markdown(f'''
+        <div class="metric-card dnf-card">
+            <div class="metric-label">💥 Latest DNF</div>
+            <div class="metric-value">{dnf_name}</div>
+        </div>
+        ''', unsafe_allow_html=True)
 
-                st.markdown(f"""
-                <div class="{card_class}">
-                    <span class="f1-badge">{row['F1 Points']} PTS</span>
-                    <h3 style="margin:0; font-size: 19px;">P{rank}. {row['Driver / Team']}</h3>
-                    <div style="color: #A0AAB8; font-size: 13px; margin-top: 6px;">
-                        Record: <b>{row['Record']}</b> &nbsp;|&nbsp; Total PF: <b>{row['Total PF']}</b>
-                    </div>
+    # Navigation Tabs
+    tab_cards, tab_chart, tab_table = st.tabs(["🏎️ Leaderboard", "📊 Telemetry", "📋 Full Table"])
+
+    with tab_cards:
+        # Native Mobile Driver Cards
+        for idx, t in enumerate(sorted_teams):
+            rank_num = idx + 1
+            
+            if rank_num == 1:
+                rank_class = "rank-p1"
+                card_border = "p1-border"
+            elif rank_num == 2:
+                rank_class = "rank-p2"
+                card_border = ""
+            elif rank_num == 3:
+                rank_class = "rank-p3"
+                card_border = ""
+            else:
+                rank_class = "rank-points"
+                card_border = ""
+
+            last3 = t["recent_ranks"][-3:]
+            avg_rank = sum(last3) / len(last3) if last3 else 5
+            if avg_rank <= 2:
+                form = "🔥 Hot"
+            elif avg_rank <= 4:
+                form = "📈 Surging"
+            elif avg_rank >= 8:
+                form = "📉 Slumping"
+            else:
+                form = "➖ Steady"
+
+            is_dnf = dnf_team_id and teams_map[dnf_team_id] == t["name"]
+            status_str = "💥 DNF" if is_dnf else f"{form}"
+
+            st.markdown(f'''
+            <div class="driver-card {card_border}">
+                <div class="driver-rank {rank_class}">P{rank_num}</div>
+                <div class="driver-info">
+                    <div class="driver-name">{t["name"]}</div>
+                    <div class="driver-sub">{t["points"]:.2f} Total PF • {t["wins"]}-{t["losses"]}-{t["ties"]} • {status_str}</div>
                 </div>
-                """, unsafe_allow_html=True)
+                <div class="driver-stats">
+                    <div class="f1-badge">{t["f1"]}</div>
+                    <div class="f1-label">F1 PTS</div>
+                </div>
+            </div>
+            ''', unsafe_allow_html=True)
 
-        with tab2:
-            st.subheader("Season Telemetry & Statistics")
-            col1, col2 = st.columns(2)
-            with col1:
-                st.markdown("##### F1 Championship Points")
-                st.bar_chart(df_standings.set_index("Driver / Team")["F1 Points"])
-            with col2:
-                st.markdown("##### Total Fantasy Points Scored")
-                st.bar_chart(df_standings.set_index("Driver / Team")["Total PF"])
+    with tab_chart:
+        st.subheader("📊 F1 Points Distribution")
+        
+        chart_data = []
+        for idx, t in enumerate(sorted_teams):
+            chart_data.append({
+                "Team Name": t["name"],
+                "F1 Points": t["f1"]
+            })
+        df_chart = pd.DataFrame(chart_data)
+        
+        st.bar_chart(
+            df_chart,
+            x="Team Name",
+            y="F1 Points",
+            sort=False,
+            horizontal=True
+        )
 
-        with tab3:
-            st.subheader("Official Standings Table")
-            st.dataframe(
-                df_standings,
-                use_container_width=True,
-                column_config={
-                    "F1 Points": st.column_config.NumberColumn("F1 Points 🏁", format="%d"),
-                    "Total PF": st.column_config.NumberColumn("Total PF ⚡", format="%.2f"),
-                }
-            )
-    else:
-        st.warning("Connected to ESPN, but no matchup scoring data was returned.")
-else:
-    st.error("Unable to connect to ESPN API. Please check network status or league privacy settings.")
+    with tab_table:
+        table_data = []
+        for idx, t in enumerate(sorted_teams):
+            last3 = t["recent_ranks"][-3:]
+            avg_rank = sum(last3) / len(last3) if last3 else 5
+            if avg_rank <= 2:
+                form = "🔥 Hot"
+            elif avg_rank <= 4:
+                form = "📈 Surging"
+            elif avg_rank >= 8:
+                form = "📉 Slumping"
+            else:
+                form = "➖ Steady"
+
+            table_data.append({
+                "Pos": f"P{idx + 1}",
+                "Team Name": t["name"],
+                "F1 Pts": t["f1"],
+                "Total PF": round(t["points"], 2),
+                "Form": form,
+                "Record": f"{t['wins']}-{t['losses']}-{t['ties']}",
+                "P1 Wins": t["p1"],
+                "Podiums": t["podiums"]
+            })
+
+        df_table = pd.DataFrame(table_data)
+        st.dataframe(df_table, use_container_width=True, hide_index=True)
+
+# Run App
+build_dashboard()
